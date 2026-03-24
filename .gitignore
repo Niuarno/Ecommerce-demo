@@ -34,5 +34,6 @@ Thumbs.db
 # Vercel
 .vercel
 
-# Database
-*.db-journal
+# Prisma
+prisma/*.db
+prisma/*.db-journal

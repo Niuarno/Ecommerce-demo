@@ -1,13 +1,14 @@
 // VOXEL - Universal E-Commerce Platform
-// Modern, Scalable, Production-Ready
+// Supabase PostgreSQL Schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================
@@ -25,7 +26,6 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
   accounts     Account[]
   sessions     Session[]
   addresses    Address[]
@@ -44,12 +44,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -90,7 +90,7 @@ enum Role {
 model Address {
   id          String   @id @default(cuid())
   userId      String
-  label       String?  // Home, Work, etc.
+  label       String?
   firstName   String
   lastName    String
   phone       String?
@@ -132,7 +132,7 @@ model Category {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children    Category[] @relation("CategoryTree")
   products    Product[]
 
@@ -144,7 +144,7 @@ model Product {
   name        String
   slug        String   @unique
   sku         String   @unique
-  description String
+  description String   @db.Text
   shortDesc   String?
   price       Float
   comparePrice Float?
@@ -159,16 +159,16 @@ model Product {
   stock       Int      @default(0)
   lowStock    Int      @default(5)
   weight      Float?
-  dimensions  String?  // LxWxH
+  dimensions  String?
   isActive    Boolean  @default(true)
   isFeatured  Boolean  @default(false)
   isDigital   Boolean  @default(false)
-  tags        String?  // JSON array of tags
-  metadata    String?  // JSON for additional data
+  tags        String?
+  metadata    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  category    Category @relation(fields: [categoryId], references: [id])
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([categoryId])
   @@index([slug])
@@ -198,7 +198,7 @@ model ProductVariant {
   price     Float?
   stock     Int      @default(0)
   image     String?
-  options   String?  // JSON: {"color": "red", "size": "L"}
+  options   String?
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -215,10 +215,10 @@ model ProductReview {
   id        String   @id @default(cuid())
   productId String
   userId    String
-  rating    Int      // 1-5
+  rating    Int
   title     String?
-  comment   String?
-  isVerified Boolean @default(false) // Verified purchase
+  comment   String?  @db.Text
+  isVerified Boolean @default(false)
   isApproved Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -238,7 +238,7 @@ model ProductReview {
 model Cart {
   id        String   @id @default(cuid())
   userId    String?
-  sessionId String?  // For guest carts
+  sessionId String?
   items     CartItem[]
   couponId  String?
   coupon    Coupon?  @relation(fields: [couponId], references: [id])
@@ -309,24 +309,20 @@ model Order {
   status          OrderStatus @default(PENDING)
   paymentStatus   PaymentStatus @default(PENDING)
   paymentMethod   String?
-  paymentId       String?  // External payment ID
+  paymentId       String?
 
-  // Pricing
   subtotal        Float
   discount        Float    @default(0)
   shipping        Float    @default(0)
   tax             Float    @default(0)
   total           Float
 
-  // Addresses (stored as JSON for historical record)
-  shippingAddress String  // JSON
-  billingAddress  String? // JSON
+  shippingAddress String  @db.Text
+  billingAddress  String? @db.Text
 
-  // Customer notes
   customerNote    String?
   adminNote       String?
 
-  // Timestamps
   paidAt          DateTime?
   shippedAt       DateTime?
   deliveredAt     DateTime?
@@ -334,7 +330,6 @@ model Order {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  // Relations
   user            User        @relation(fields: [userId], references: [id])
   items           OrderItem[]
   tracking        OrderTracking[]
@@ -354,7 +349,7 @@ model OrderItem {
   variantName String?
   sku         String
   quantity    Int
-  price       Float    // Price at time of purchase
+  price       Float
   total       Float
   image       String?
   createdAt   DateTime @default(now())
@@ -420,22 +415,22 @@ model Wishlist {
 }
 
 // ============================================
-// PAYMENT METHODS (Saved for customers)
+// PAYMENT METHODS
 // ============================================
 
 model PaymentMethod {
   id          String   @id @default(cuid())
   userId      String
-  type        String   // card, paypal, etc.
-  provider    String?  // stripe, paypal
-  providerId  String?  // External ID
-  label       String?  // "Visa ****4242"
+  type        String
+  provider    String?
+  providerId  String?
+  label       String?
   last4       String?
-  brand       String?  // visa, mastercard, etc.
+  brand       String?
   expiryMonth Int?
   expiryYear  Int?
   isDefault   Boolean  @default(false)
-  orderId     String?  // Used for orders with this payment method
+  orderId     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -452,7 +447,7 @@ model PaymentMethod {
 model Setting {
   id        String   @id @default(cuid())
   key       String   @unique
-  value     String   // JSON value
+  value     String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
