@@ -1,86 +1,82 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Chrome, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import bcrypt from "bcryptjs";
+import { useState } from "react"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Chrome, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter()
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
+      toast.error("Passwords do not match")
+      return
     }
 
     if (!acceptTerms) {
-      toast.error("Please accept the terms and conditions");
-      return;
+      toast.error("Please accept the terms and conditions")
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      // Create user
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
-      });
+      })
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Registration failed");
+        const data = await response.json()
+        throw new Error(data.error || "Registration failed")
       }
 
-      // Auto login after registration
       const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
-      });
+      })
 
       if (result?.error) {
-        toast.error("Account created but login failed");
-        router.push("/auth/login");
+        toast.error("Account created but login failed")
+        router.push("/auth/login")
       } else {
-        toast.success("Welcome to VOXEL!");
-        router.push("/");
+        toast.success("Welcome to VOXEL!")
+        router.push("/")
       }
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong");
+      toast.error(error.message || "Something went wrong")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    await signIn("google", { callbackUrl: "/" });
-  };
+    setIsLoading(true)
+    await signIn("google", { callbackUrl: "/" })
+  }
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
             <div className="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center">
@@ -89,14 +85,10 @@ export default function RegisterPage() {
             <span className="text-2xl font-bold gradient-text">VOXEL</span>
           </Link>
           <h1 className="text-2xl font-bold mb-2">Create an account</h1>
-          <p className="text-muted-foreground">
-            Join VOXEL and start shopping today
-          </p>
+          <p className="text-muted-foreground">Join VOXEL and start shopping today</p>
         </div>
 
-        {/* Register form */}
         <div className="bg-card border rounded-2xl p-6 shadow-sm">
-          {/* Social login */}
           <Button
             variant="outline"
             className="w-full h-11"
@@ -114,7 +106,6 @@ export default function RegisterPage() {
             </span>
           </div>
 
-          {/* Register form */}
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
@@ -194,43 +185,25 @@ export default function RegisterPage() {
                 checked={acceptTerms}
                 onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
               />
-              <label
-                htmlFor="terms"
-                className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
+              <label htmlFor="terms" className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 I agree to the{" "}
-                <Link href="/terms" className="text-primary hover:underline">
-                  Terms of Service
-                </Link>{" "}
+                <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-primary hover:underline">
-                  Privacy Policy
-                </Link>
+                <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
               </label>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full h-11 gradient-bg"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Create Account"
-              )}
+            <Button type="submit" className="w-full h-11 gradient-bg" disabled={isLoading}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
             </Button>
           </form>
 
-          {/* Sign in link */}
           <p className="text-center text-sm text-muted-foreground mt-6">
             Already have an account?{" "}
-            <Link href="/auth/login" className="text-primary font-medium hover:underline">
-              Sign in
-            </Link>
+            <Link href="/auth/login" className="text-primary font-medium hover:underline">Sign in</Link>
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

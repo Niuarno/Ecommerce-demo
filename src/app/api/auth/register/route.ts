@@ -1,35 +1,31 @@
-import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server"
+import { db } from "@/lib/db"
+import bcrypt from "bcryptjs"
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password } = await request.json();
+    const { name, email, password } = await request.json()
 
-    // Validate input
-    if (!name || !email || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Email and password are required" },
         { status: 400 }
-      );
+      )
     }
 
-    // Check if user already exists
     const existingUser = await db.user.findUnique({
       where: { email },
-    });
+    })
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "User with this email already exists" },
+        { error: "User already exists" },
         { status: 400 }
-      );
+      )
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create user
     const user = await db.user.create({
       data: {
         name,
@@ -37,17 +33,18 @@ export async function POST(request: Request) {
         password: hashedPassword,
         role: "CUSTOMER",
       },
-    });
+    })
 
-    return NextResponse.json(
-      { message: "User created successfully", userId: user.id },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    })
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Registration error:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
-    );
+    )
   }
 }

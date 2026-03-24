@@ -1,139 +1,65 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
-// Cart Item Type
-export interface CartItem {
-  id: string;
-  productId: string;
-  variantId?: string;
-  name: string;
-  slug: string;
-  price: number;
-  quantity: number;
-  image: string;
-  variant?: {
-    name: string;
-    options: Record<string, string>;
-  };
+interface CartItem {
+  id: string
+  productId: string
+  name: string
+  price: number
+  image: string
+  quantity: number
 }
 
-// Cart Store
 interface CartStore {
-  items: CartItem[];
-  couponCode: string | null;
-  isOpen: boolean;
-  addItem: (item: CartItem) => void;
-  removeItem: (productId: string, variantId?: string) => void;
-  updateQuantity: (productId: string, variantId: string | undefined, quantity: number) => void;
-  clearCart: () => void;
-  setCoupon: (code: string | null) => void;
-  setOpen: (open: boolean) => void;
-  getTotalItems: () => number;
-  getTotalPrice: () => number;
+  items: CartItem[]
+  addItem: (item: CartItem) => void
+  removeItem: (id: string) => void
+  updateQuantity: (id: string, quantity: number) => void
+  clearCart: () => void
+  getTotal: () => number
 }
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
-      couponCode: null,
-      isOpen: false,
-      addItem: (item) => {
-        const items = get().items;
-        const existingIndex = items.findIndex(
-          (i) => i.productId === item.productId && i.variantId === item.variantId
-        );
-
-        if (existingIndex > -1) {
-          const newItems = [...items];
-          newItems[existingIndex].quantity += item.quantity;
-          set({ items: newItems });
-        } else {
-          set({ items: [...items, item] });
-        }
-      },
-      removeItem: (productId, variantId) => {
-        set({
-          items: get().items.filter(
-            (item) => !(item.productId === productId && item.variantId === variantId)
-          ),
-        });
-      },
-      updateQuantity: (productId, variantId, quantity) => {
-        const items = get().items.map((item) => {
-          if (item.productId === productId && item.variantId === variantId) {
-            return { ...item, quantity: Math.max(1, quantity) };
+      addItem: (item) => set((state) => {
+        const existingItem = state.items.find((i) => i.productId === item.productId)
+        if (existingItem) {
+          return {
+            items: state.items.map((i) =>
+              i.productId === item.productId ? { ...i, quantity: i.quantity + item.quantity } : i
+            ),
           }
-          return item;
-        });
-        set({ items });
-      },
-      clearCart: () => set({ items: [], couponCode: null }),
-      setCoupon: (code) => set({ couponCode: code }),
-      setOpen: (open) => set({ isOpen: open }),
-      getTotalItems: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
-      getTotalPrice: () => get().items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        }
+        return { items: [...state.items, item] }
+      }),
+      removeItem: (id) => set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+      updateQuantity: (id, quantity) => set((state) => ({
+        items: state.items.map((i) => (i.id === id ? { ...i, quantity } : i)),
+      })),
+      clearCart: () => set({ items: [] }),
+      getTotal: () => get().items.reduce((total, item) => total + item.price * item.quantity, 0),
     }),
-    {
-      name: "voxel-cart",
-      storage: createJSONStorage(() => localStorage),
-    }
+    { name: 'voxel-cart' }
   )
-);
+)
 
-// Wishlist Store
 interface WishlistStore {
-  items: string[]; // Product IDs
-  addItem: (productId: string) => void;
-  removeItem: (productId: string) => void;
-  isInWishlist: (productId: string) => boolean;
+  items: string[]
+  addItem: (productId: string) => void
+  removeItem: (productId: string) => void
+  isInWishlist: (productId: string) => boolean
 }
 
 export const useWishlistStore = create<WishlistStore>()(
   persist(
     (set, get) => ({
       items: [],
-      addItem: (productId) => {
-        const items = get().items;
-        if (!items.includes(productId)) {
-          set({ items: [...items, productId] });
-        }
-      },
-      removeItem: (productId) => {
-        set({ items: get().items.filter((id) => id !== productId) });
-      },
+      addItem: (productId) => set((state) => ({ items: [...state.items, productId] })),
+      removeItem: (productId) => set((state) => ({ items: state.items.filter((id) => id !== productId) })),
       isInWishlist: (productId) => get().items.includes(productId),
     }),
-    {
-      name: "voxel-wishlist",
-      storage: createJSONStorage(() => localStorage),
-    }
+    { name: 'voxel-wishlist' }
   )
-);
-
-// UI Store
-interface UIStore {
-  isSidebarOpen: boolean;
-  isSearchOpen: boolean;
-  theme: "light" | "dark" | "system";
-  setSidebarOpen: (open: boolean) => void;
-  setSearchOpen: (open: boolean) => void;
-  setTheme: (theme: "light" | "dark" | "system") => void;
-}
-
-export const useUIStore = create<UIStore>()(
-  persist(
-    (set) => ({
-      isSidebarOpen: false,
-      isSearchOpen: false,
-      theme: "system",
-      setSidebarOpen: (open) => set({ isSidebarOpen: open }),
-      setSearchOpen: (open) => set({ isSearchOpen: open }),
-      setTheme: (theme) => set({ theme }),
-    }),
-    {
-      name: "voxel-ui",
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
+)

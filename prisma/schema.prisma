@@ -1,6 +1,3 @@
-// VOXEL - Universal E-Commerce Platform
-// Supabase PostgreSQL Schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,10 +7,6 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-
-// ============================================
-// USER & AUTHENTICATION
-// ============================================
 
 model User {
   id            String    @id @default(cuid())
@@ -83,10 +76,6 @@ enum Role {
   SUPER_ADMIN
 }
 
-// ============================================
-// ADDRESSES
-// ============================================
-
 model Address {
   id          String   @id @default(cuid())
   userId      String
@@ -115,10 +104,6 @@ enum AddressType {
   BILLING
   BOTH
 }
-
-// ============================================
-// PRODUCT CATALOG
-// ============================================
 
 model Category {
   id          String   @id @default(cuid())
@@ -231,10 +216,6 @@ model ProductReview {
   @@map("product_reviews")
 }
 
-// ============================================
-// SHOPPING CART
-// ============================================
-
 model Cart {
   id        String   @id @default(cuid())
   userId    String?
@@ -267,10 +248,6 @@ model CartItem {
   @@map("cart_items")
 }
 
-// ============================================
-// COUPONS & DISCOUNTS
-// ============================================
-
 model Coupon {
   id          String     @id @default(cuid())
   code        String     @unique
@@ -297,10 +274,6 @@ enum DiscountType {
   PERCENTAGE
   FIXED
 }
-
-// ============================================
-// ORDERS
-// ============================================
 
 model Order {
   id              String   @id @default(cuid())
@@ -397,10 +370,6 @@ enum PaymentStatus {
   PARTIALLY_REFUNDED
 }
 
-// ============================================
-// WISHLIST
-// ============================================
-
 model Wishlist {
   id        String   @id @default(cuid())
   userId    String
@@ -413,10 +382,6 @@ model Wishlist {
   @@unique([userId, productId])
   @@map("wishlist")
 }
-
-// ============================================
-// PAYMENT METHODS
-// ============================================
 
 model PaymentMethod {
   id          String   @id @default(cuid())
@@ -439,10 +404,6 @@ model PaymentMethod {
 
   @@map("payment_methods")
 }
-
-// ============================================
-// STORE SETTINGS
-// ============================================
 
 model Setting {
   id        String   @id @default(cuid())
